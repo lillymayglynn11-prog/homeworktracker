@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en-GB" data-theme="light" data-palette="indigo">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="RevTrack — a private, offline-first revision tracker. Time your study sessions, plan your week and watch your progress grow. All data stays in your browser." />
+  <meta name="theme-color" content="#f2f4f8" id="meta-theme-color" />
+  <title>RevTrack — Revision Tracker</title>
+
+  <link rel="icon" type="image/svg+xml" href="assets/icons/favicon.svg" />
+
+  <!-- Typography (loaded from Google Fonts CDN; falls back to system fonts offline) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- Chart.js from CDN (charts degrade gracefully if the CDN is unreachable) -->
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <script defer src="script.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <!-- Initial loading veil -->
+  <div id="app-loader" aria-hidden="true">
+    <div class="loader-mark">
+      <svg viewBox="0 0 48 48" width="44" height="44" aria-hidden="true">
+        <rect x="4" y="4" width="40" height="40" rx="12" fill="currentColor" opacity="0.12"/>
+        <path d="M14 30 L21 22 L27 27 L34 16" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span>RevTrack</span>
+    </div>
+    <div class="loader-paws" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+  </div>
+
+  <canvas id="bg-canvas" aria-hidden="true"></canvas>
+  <div class="bg-decor" aria-hidden="true"></div>
+
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="brand">
+        <svg class="brand-mark" viewBox="0 0 48 48" width="30" height="30" aria-hidden="true">
+          <rect x="4" y="4" width="40" height="40" rx="12" class="brand-tile"/>
+          <path d="M14 30 L21 22 L27 27 L34 16" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span class="brand-name">RevTrack</span>
+      </div>
+
+      <nav class="main-nav" aria-label="Main">
+        <button class="nav-btn is-active" data-view="dashboard" aria-current="page">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 13h6V4H4v9zm0 7h6v-5H4v5zm10 0h6v-9h-6v9zm0-16v5h6V4h-6z"/></svg>
+          <span>Dashboard</span>
+        </button>
+        <button class="nav-btn" data-view="calendar">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 2v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2V2h-2v2H9V2H7zm-2 8h14v10H5V10z"/></svg>
+          <span>Calendar</span>
+        </button>
+        <button class="nav-btn" data-view="tasks">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2H5zm5.2 12.6-3.4-3.4 1.4-1.4 2 2 4.6-4.6 1.4 1.4-6 6z"/></svg>
+          <span>Tasks</span>
+        </button>
+        <button class="nav-btn" data-view="board">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17.2V21h3.8L17.9 9.9l-3.8-3.8L3 17.2zM20.7 7.1a1 1 0 0 0 0-1.4l-2.4-2.4a1 1 0 0 0-1.4 0l-1.8 1.8 3.8 3.8 1.8-1.8z"/></svg>
+          <span>Board</span>
+        </button>
+        <button class="nav-btn" data-view="quests">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12.6c-3 0-5.4 2-5.4 4.4 0 1.8 1.4 3.1 3.2 3.1.8 0 1.6-.3 2.2-.8.6.5 1.4.8 2.2.8 1.8 0 3.2-1.3 3.2-3.1 0-2.4-2.4-4.4-5.4-4.4zM6.3 8.1c-1 .1-1.7 1.2-1.6 2.4.1 1.2 1 2.1 2 2s1.7-1.2 1.6-2.4c-.1-1.2-1-2.1-2-2zm11.4 0c-1-.1-1.9.8-2 2-.1 1.2.6 2.3 1.6 2.4 1 .1 1.9-.8 2-2 .1-1.2-.6-2.3-1.6-2.4zM9.4 3.5c-1 .1-1.8 1.3-1.6 2.6.2 1.3 1.1 2.3 2.1 2.2 1-.1 1.8-1.3 1.6-2.6-.2-1.3-1.1-2.3-2.1-2.2zm5.2 0c-1-.1-1.9.9-2.1 2.2-.2 1.3.6 2.5 1.6 2.6 1 .1 1.9-.9 2.1-2.2.2-1.3-.6-2.5-1.6-2.6z"/></svg>
+          <span>Quests</span>
+        </button>
+        <button class="nav-btn" data-view="music">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v9.3a4 4 0 1 0 2 3.5V7h5V3h-7z"/></svg>
+          <span>Music</span>
+        </button>
+        <button class="nav-btn" data-view="stats">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20V10H2l10-8 10 8h-3v10h-5v-6h-4v6H5z"/></svg>
+          <span>Statistics</span>
+        </button>
+        <button class="nav-btn" data-view="consistency">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 2s.7 2.6-1.2 4.9C10.6 9 8.5 10.2 8.5 13a4.6 4.6 0 0 0 1.6 3.5c-.1-.6 0-1.5.7-2.3.8-1 1.9-1.4 1.9-3 1.6 1 3.3 3 3.3 5a5 5 0 0 1-10 .2C6 12.9 8.7 10.7 10.2 9c1.6-1.8 2-4.4 3.3-7zM12 22a7 7 0 0 0 7-7c0-4-2.7-6.6-4.5-8.2.2 1.9-.5 3.4-1.6 4.7 1.9 1.3 3.1 3.2 3.1 4.7A4 4 0 0 1 12 20a4 4 0 0 1-.2 2z" fill-rule="evenodd"/></svg>
+          <span>Consistency</span>
+        </button>
+        <button class="nav-btn" data-view="setup">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zm9.4 4a7.4 7.4 0 0 0-.1-1.2l2.1-1.6-2-3.5-2.5 1a7.6 7.6 0 0 0-2-1.2L16.5 2h-4l-.4 2.5a7.6 7.6 0 0 0-2 1.2l-2.5-1-2 3.5 2.1 1.6a7.5 7.5 0 0 0 0 2.4L1.6 13.8l2 3.5 2.5-1c.6.5 1.3.9 2 1.2l.4 2.5h4l.4-2.5c.7-.3 1.4-.7 2-1.2l2.5 1 2-3.5-2.1-1.6c.1-.4.1-.8.1-1.2z"/></svg>
+          <span>Setup</span>
+        </button>
+      </nav>
+
+      <div class="header-tools">
+        <button id="pet-chip" class="pet-chip" title="Open cat companion" aria-label="Cat level and XP">
+          <svg viewBox="0 0 24 24" aria-hidden="true" class="pet-chip-icon"><path d="M4.5 4 8 7.2A7.9 7.9 0 0 1 12 6.2c1.5 0 2.8.4 4 1L19.5 4l.6 5.3c.6 1 .9 2.1.9 3.2 0 4.1-4 7.3-9 7.3s-9-3.2-9-7.3c0-1.1.3-2.2.9-3.2L4.5 4zM9 12.3a1.1 1.1 0 1 0 0 2.2 1.1 1.1 0 0 0 0-2.2zm6 0a1.1 1.1 0 1 0 0 2.2 1.1 1.1 0 0 0 0-2.2zm-3 2.5.9 1.4h-1.8l.9-1.4z"/></svg>
+          <span class="pet-chip-body"><span id="pet-chip-lv">Lv 1</span><span class="pet-chip-bar"><span id="pet-chip-fill"></span></span></span>
+        </button>
+        <div class="search-wrap">
+          <svg class="search-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 14h-.8l-.3-.3a6.5 6.5 0 1 0-.7.7l.3.3v.8l5 5 1.5-1.5-5-5zm-6 0a4.5 4.5 0 1 1 0-9 4.5 4.5 0 0 1 0 9z"/></svg>
+          <input id="global-search" type="search" placeholder="Search sessions… ( / )" autocomplete="off"
+                 aria-label="Search sessions by subject, title, notes or date" aria-expanded="false" aria-controls="search-panel" role="combobox" />
+          <div id="search-panel" class="search-panel" role="listbox" aria-label="Search results" hidden></div>
+        </div>
+        <button id="theme-toggle" class="btn-icon" aria-label="Toggle dark mode" title="Toggle theme (T)">
+          <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10zm0-5h0l1 3h-2l1-3zm0 20 1-3h-2l1 3zM2 12l3-1v2l-3-1zm20 0-3 1v-2l3 1zM4.9 4.9l2.8 1.4-1.4 1.4L4.9 4.9zm14.2 14.2-2.8-1.4 1.4-1.4 1.4 2.8zM19.1 4.9l-1.4 2.8-1.4-1.4 2.8-1.4zM4.9 19.1l1.4-2.8 1.4 1.4-2.8 1.4z"/></svg>
+          <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 14.5A8.5 8.5 0 0 1 9.5 3 8.5 8.5 0 1 0 21 14.5z"/></svg>
+        </button>
+        <button id="shortcuts-btn" class="btn-icon" aria-label="Keyboard shortcuts" title="Keyboard shortcuts (?)">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H4zm2 3h2v2H6V8zm4 0h2v2h-2V8zm4 0h2v2h-2V8zm2 4h2v2h-2v-2zm-4 0h2v2h-2v-2zm-4 0h2v2h-2v-2zm-4 0h2v2H4.01L4 12h2zm2 4h8v2H8v-2z"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main">
+
+    <!-- ══════════════════════ DASHBOARD ══════════════════════ -->
+    <section id="view-dashboard" class="view is-active" aria-labelledby="greeting">
+      <div class="dash-head">
+        <div>
+          <h1 id="greeting" class="greeting">Hello</h1>
+          <p id="date-line" class="date-line"></p>
+        </div>
+        <div class="clock-chip" role="timer" aria-label="Current time in London">
+          <span class="clock-dot" aria-hidden="true"></span>
+          <div>
+            <span id="clock-time" class="clock-time">--:--:--</span>
+            <span class="clock-zone">Europe / London</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="dash-grid">
+
+        <!-- Today + timer -->
+        <article class="card card-today" aria-labelledby="today-title">
+          <header class="card-head">
+            <h2 id="today-title" class="card-title">Today's revision</h2>
+            <span id="today-total" class="stat-big hl">0m</span>
+          </header>
+
+          <div class="timer-zone" id="timer-zone">
+            <div class="timer-ring-wrap" aria-hidden="true">
+              <svg class="timer-ring" viewBox="0 0 120 120">
+                <circle class="ring-track" cx="60" cy="60" r="52"/>
+                <circle class="ring-progress" id="ring-progress" cx="60" cy="60" r="52"/>
+              </svg>
+              <div class="timer-readout">
+                <span id="timer-display" class="timer-display">00:00:00</span>
+                <span id="timer-state" class="timer-state">Ready</span>
+              </div>
+            </div>
+            <div class="timer-meta">
+              <span id="timer-subject" class="subject-chip" hidden></span>
+              <span id="timer-session-title" class="timer-session-title" hidden></span>
+            </div>
+          </div>
+
+          <div class="timer-controls" role="group" aria-label="Timer controls">
+            <button id="btn-start" class="btn btn-primary">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg> Start session
+            </button>
+            <button id="btn-pause" class="btn" hidden>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg> Pause
+            </button>
+            <button id="btn-resume" class="btn btn-primary" hidden>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg> Resume
+            </button>
+            <button id="btn-finish" class="btn btn-success" hidden>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"/></svg> Finish
+            </button>
+            <button id="btn-reset" class="btn btn-ghost" hidden title="Discard this session">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5V2L7 6l5 4V7a5 5 0 1 1-5 5H5a7 7 0 1 0 7-7z"/></svg> Discard
+            </button>
+            <button id="btn-manual" class="btn btn-ghost">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6z"/></svg> Add time manually
+            </button>
+          </div>
+        </article>
+
+        <!-- Weekly -->
+        <article class="card card-week" aria-labelledby="week-title">
+          <header class="card-head">
+            <h2 id="week-title" class="card-title">This week</h2>
+            <span id="week-percent" class="pill">0%</span>
+          </header>
+          <p class="stat-line"><span id="week-hours" class="stat-big">0h</span> <span id="week-target-label" class="stat-sub">of 10h target</span></p>
+          <div class="progress" role="progressbar" aria-label="Weekly target progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="week-progressbar">
+            <div class="progress-fill" id="week-progress-fill"></div>
+          </div>
+          <div id="week-days" class="week-days" aria-label="Daily totals this week"></div>
+        </article>
+
+        <!-- Monthly -->
+        <article class="card card-month" aria-labelledby="month-title">
+          <header class="card-head">
+            <h2 id="month-title" class="card-title">This month</h2>
+            <span id="month-name" class="pill pill-quiet"></span>
+          </header>
+          <p class="stat-line"><span id="month-hours" class="stat-big">0h</span> <span class="stat-sub">revised</span></p>
+          <dl class="mini-stats">
+            <div><dt>Daily average</dt><dd id="month-avg">0m</dd></div>
+            <div><dt>Sessions</dt><dd id="month-count">0</dd></div>
+            <div><dt>Best day</dt><dd id="month-best">—</dd></div>
+          </dl>
+        </article>
+
+        <!-- Main graph -->
+        <article class="card card-chart-main" aria-labelledby="chart-main-title">
+          <header class="card-head">
+            <h2 id="chart-main-title" class="card-title">Revision graph</h2>
+            <div class="seg" role="group" aria-label="Graph range">
+              <button class="seg-btn is-active" data-range="daily">Daily</button>
+              <button class="seg-btn" data-range="weekly">Weekly</button>
+              <button class="seg-btn" data-range="monthly">Monthly</button>
+            </div>
+          </header>
+          <div class="chart-box tall"><canvas id="chart-main" aria-label="Revision over time" role="img"></canvas></div>
+          <div class="chart-empty" id="chart-main-empty" hidden>
+            <p>No revision logged yet — your progress will appear here.</p>
+          </div>
+        </article>
+
+        <!-- Subject pie -->
+        <article class="card card-chart-pie" aria-labelledby="pie-title">
+          <header class="card-head">
+            <h2 id="pie-title" class="card-title">Time by subject</h2>
+          </header>
+          <div class="chart-box"><canvas id="chart-pie" aria-label="Share of revision by subject" role="img"></canvas></div>
+          <ul id="pie-legend" class="pie-legend" aria-label="Subject shares"></ul>
+          <div class="chart-empty" id="chart-pie-empty" hidden>
+            <p>Log a session to see how your time splits between subjects.</p>
+          </div>
+        </article>
+
+        <!-- Recent sessions -->
+        <article class="card card-recent" aria-labelledby="recent-title">
+          <header class="card-head">
+            <h2 id="recent-title" class="card-title">Recent sessions</h2>
+            <button id="recent-view-all" class="btn btn-ghost btn-small">Open calendar</button>
+          </header>
+          <ul id="recent-list" class="session-list"></ul>
+        </article>
+      </div>
+      <article class="card card-studio-home" aria-labelledby="dash-board-title">
+        <header class="card-head">
+          <h2 id="dash-board-title" class="card-title">Whiteboard studio</h2>
+          <button id="dash-board-expand" class="btn btn-ghost btn-sm">Open full screen</button>
+        </header>
+        <div id="dash-studio-slot" class="studio-slot"></div>
+      </article>
+    </section>
+
+    <!-- ══════════════════════ CALENDAR ══════════════════════ -->
+    <section id="view-calendar" class="view" aria-label="Weekly planner">
+      <div class="view-toolbar">
+        <div class="toolbar-left">
+          <h1 class="view-title">Weekly planner</h1>
+          <p class="view-sub">All times shown in Europe/London.</p>
+        </div>
+        <div class="toolbar-right">
+          <div class="btn-cluster" role="group" aria-label="Change week">
+            <button id="cal-prev" class="btn btn-icon-text" aria-label="Previous week">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.4 7.4 14 6l-6 6 6 6 1.4-1.4L10.8 12z"/></svg>
+            </button>
+            <button id="cal-today" class="btn">Today</button>
+            <button id="cal-next" class="btn btn-icon-text" aria-label="Next week">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8.6 16.6 1.4 1.4 6-6-6-6-1.4 1.4 4.6 4.6z"/></svg>
+            </button>
+          </div>
+          <h2 id="cal-range" class="cal-range" aria-live="polite"></h2>
+          <button id="cal-add" class="btn btn-primary">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6z"/></svg> Add block
+          </button>
+        </div>
+      </div>
+
+      <div id="cal-scroll" class="cal-scroll" tabindex="0" aria-label="Week grid, scrollable">
+        <div id="cal-grid" class="cal-grid"></div>
+      </div>
+      <p class="cal-hint">Tip: click an empty space in a day to plan a block there. Drag a block with the mouse to move it.</p>
+    </section>
+
+    <!-- ══════════════════════ STATISTICS ══════════════════════ -->
+    <section id="view-stats" class="view" aria-label="Statistics">
+      <div class="view-toolbar">
+        <div class="toolbar-left">
+          <h1 class="view-title">Statistics</h1>
+          <p class="view-sub" id="stats-sub">A complete picture of your revision.</p>
+        </div>
+      </div>
+
+      <div id="stat-tiles" class="stat-tiles"></div>
+
+      <div class="stats-grid">
+        <article class="card">
+          <header class="card-head"><h2 class="card-title">Hours by weekday</h2></header>
+          <div class="chart-box"><canvas id="chart-weekday" role="img" aria-label="Hours by weekday"></canvas></div>
+        </article>
+        <article class="card">
+          <header class="card-head"><h2 class="card-title">Hours by month</h2></header>
+          <div class="chart-box"><canvas id="chart-months" role="img" aria-label="Hours by month"></canvas></div>
+        </article>
+        <article class="card">
+          <header class="card-head"><h2 class="card-title">Hours by year</h2></header>
+          <div class="chart-box"><canvas id="chart-years" role="img" aria-label="Hours by year"></canvas></div>
+        </article>
+        <article class="card">
+          <header class="card-head"><h2 class="card-title">Trend · 7-day average</h2></header>
+          <div class="chart-box"><canvas id="chart-trend" role="img" aria-label="Seven day rolling average"></canvas></div>
+        </article>
+        <article class="card">
+          <header class="card-head"><h2 class="card-title">This month by subject</h2></header>
+          <div class="chart-box"><canvas id="chart-doughnut" role="img" aria-label="This month's revision by subject"></canvas></div>
+        </article>
+        <article class="card card-heatmap">
+          <header class="card-head">
+            <h2 class="card-title">Consistency heatmap</h2>
+            <div class="heat-scale" aria-hidden="true">
+              <span>Less</span>
+              <i class="heat-cell l0"></i><i class="heat-cell l1"></i><i class="heat-cell l2"></i><i class="heat-cell l3"></i><i class="heat-cell l4"></i>
+              <span>More</span>
+            </div>
+          </header>
+          <div class="heatmap-scroll"><div id="heatmap" class="heatmap" role="img" aria-label="Daily revision heatmap for the last year"></div></div>
+        </article>
+      </div>
+
+      <article class="card">
+        <header class="card-head"><h2 class="card-title">Subjects in detail</h2></header>
+        <div class="table-scroll">
+          <table class="subject-table" id="subject-stats" aria-label="Per-subject statistics">
+            <thead>
+              <tr><th scope="col">Subject</th><th scope="col">Total</th><th scope="col">This week</th><th scope="col">This month</th><th scope="col">Sessions</th><th scope="col">Avg session</th><th scope="col">Longest</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="chart-empty" id="subject-stats-empty" hidden><p>Add subjects in Setup to see their breakdown here.</p></div>
+      </article>
+    </section>
+
+    <!-- ══════════════════════ SETUP ══════════════════════ -->
+    <section id="view-setup" class="view" aria-label="Setup">
+      <div class="view-toolbar">
+        <div class="toolbar-left">
+          <h1 class="view-title">Setup</h1>
+          <p class="view-sub">Subjects, targets and preferences. Everything saves automatically.</p>
+        </div>
+      </div>
+
+      <div class="setup-grid">
+        <article class="card" aria-labelledby="subjects-title">
+          <header class="card-head"><h2 id="subjects-title" class="card-title">Subjects</h2></header>
+          <ul id="subject-list" class="subject-list" aria-label="Your subjects — drag to reorder"></ul>
+          <form id="add-subject-form" class="add-subject" autocomplete="off">
+            <input id="new-subject-name" type="text" placeholder="e.g. Biology" maxlength="40" aria-label="New subject name" required />
+            <input id="new-subject-color" type="color" value="#5457e0" aria-label="New subject colour" title="Subject colour" />
+            <button type="submit" class="btn btn-primary" id="btn-add-subject">Add subject</button>
+          </form>
+        </article>
+
+        <article class="card" aria-labelledby="targets-title">
+          <header class="card-head"><h2 id="targets-title" class="card-title">Targets &amp; timer</h2></header>
+          <div class="field-grid">
+            <label class="field">
+              <span>Weekly target (hours)</span>
+              <input id="set-weekly-target" type="number" min="0" max="120" step="0.5" />
+            </label>
+            <label class="field">
+              <span>Daily target (hours)</span>
+              <input id="set-daily-target" type="number" min="0" max="24" step="0.25" />
+            </label>
+            <label class="field">
+              <span>Default session length (minutes)</span>
+              <input id="set-session-length" type="number" min="5" max="480" step="5" />
+            </label>
+            <label class="field">
+              <span>Timer notification sound</span>
+              <span class="field-row">
+                <select id="set-sound">
+                  <option value="chime">Chime</option>
+                  <option value="bell">Bell</option>
+                  <option value="beep">Beep</option>
+                  <option value="none">Silent</option>
+                </select>
+                <button type="button" id="btn-sound-preview" class="btn btn-ghost btn-small" aria-label="Preview sound">Preview</button>
+              </span>
+            </label>
+          </div>
+          <p class="field-note">The sound plays when a session finishes and when a running timer reaches the default session length.</p>
+        </article>
+
+        <article class="card" aria-labelledby="appearance-title">
+          <header class="card-head"><h2 id="appearance-title" class="card-title">Appearance</h2></header>
+          <div class="field-grid">
+            <label class="field">
+              <span>Theme</span>
+              <select id="set-theme">
+                <option value="system">Match system</option>
+                <option value="light">Light</option>
+                <option value="dark">Dark</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>Graph colours</span>
+              <select id="set-palette">
+                <option value="indigo">Indigo ink</option>
+                <option value="teal">Teal</option>
+                <option value="amber">Amber</option>
+                <option value="rose">Rose</option>
+                <option value="slate">Slate mono</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>First day of week</span>
+              <select id="set-fdw">
+                <option value="1">Monday</option>
+                <option value="0">Sunday</option>
+              </select>
+            </label>
+          </div>
+        </article>
+
+        <article class="card" aria-labelledby="data-title">
+          <header class="card-head"><h2 id="data-title" class="card-title">Your data</h2></header>
+          <p class="field-note">Everything lives in this browser's local storage — nothing is sent anywhere. Keep a backup before clearing your browser data.</p>
+          <div class="data-actions">
+            <button id="btn-export-csv" class="btn">Export sessions (CSV)</button>
+            <button id="btn-export-json" class="btn">Backup everything (JSON)</button>
+            <button id="btn-import-csv" class="btn btn-ghost">Import CSV</button>
+            <button id="btn-import-json" class="btn btn-ghost">Restore backup</button>
+            <button id="btn-clear" class="btn btn-danger">Clear all data</button>
+          </div>
+          <input type="file" id="file-import-csv" accept=".csv,text/csv" hidden />
+          <input type="file" id="file-import-json" accept=".json,application/json" hidden />
+        </article>
+
+        <article class="card" aria-labelledby="cat-set-title">
+          <header class="card-head"><h2 id="cat-set-title" class="card-title">Companion &amp; effects</h2></header>
+          <label class="field-row">Cat's name <input id="set-cat-name" maxlength="20" /></label>
+          <label class="check-row"><input type="checkbox" id="set-fx" /> <span>Playful click effects &amp; celebrations</span></label>
+          <label class="check-row"><input type="checkbox" id="set-ambient" /> <span>Animated sky background</span></label>
+          <p class="muted small">The cat dozes off when you're away and everything honours your system's reduced-motion preference.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- ══════════════════════ TASKS ══════════════════════ -->
+    <section id="view-tasks" class="view" aria-label="Tasks">
+      <div class="view-toolbar">
+        <div class="toolbar-left">
+          <h1 class="view-title">Tasks</h1>
+          <p class="view-sub">To-dos, deadlines and recurring jobs — every change saves instantly.</p>
+        </div>
+        <div class="toolbar-right"><button id="tasklist-new" class="btn">New list</button></div>
+      </div>
+      <div class="tasks-layout">
+        <aside class="tasks-aside card" aria-label="Task lists">
+          <ul id="tasklist-nav" class="tasklist-nav"></ul>
+        </aside>
+        <div class="tasks-main card">
+          <header class="tasks-head">
+            <h2 id="tasklist-title" class="card-title">Tasks</h2>
+            <div class="tasks-head-actions">
+              <button id="tasklist-rename" class="btn btn-ghost btn-sm">Rename</button>
+              <button id="tasklist-delete" class="btn btn-ghost btn-sm btn-danger-ghost">Delete list</button>
+            </div>
+          </header>
+          <div class="paw-progress" role="img" aria-label="List progress"><div id="tasklist-progress" class="paw-progress-fill"></div></div>
+          <p id="tasklist-progress-label" class="muted small"></p>
+          <form id="add-task-form" class="add-task" autocomplete="off">
+            <input id="new-task-title" type="text" maxlength="200" placeholder="Add a task… e.g. Finish Biology flashcards" aria-label="Task title" required />
+            <div class="add-task-opts">
+              <select id="new-task-priority" aria-label="Priority"><option value="0">Low</option><option value="1" selected>Medium</option><option value="2">High</option></select>
+              <input id="new-task-deadline" type="date" aria-label="Deadline" />
+              <select id="new-task-subject" aria-label="Subject"><option value="">No subject</option></select>
+              <input id="new-task-category" type="text" maxlength="40" placeholder="Category" aria-label="Category" list="task-cats" />
+              <datalist id="task-cats"></datalist>
+              <select id="new-task-recur" aria-label="Repeat"><option value="none">No repeat</option><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option></select>
+              <button type="submit" class="btn">Add</button>
+            </div>
+          </form>
+          <ul id="task-items" class="task-items" aria-label="Tasks — drag to reorder"></ul>
+          <div class="chart-empty" id="tasks-empty" hidden><p>Nothing here yet — add your first task above.</p></div>
+          <details id="task-archive-wrap" class="task-archive-wrap">
+            <summary>Completed archive (<span id="task-archive-count">0</span>)</summary>
+            <ul id="task-archive" class="task-items task-items-archive"></ul>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════ WHITEBOARD ══════════════════════ -->
+    <section id="view-board" class="view view-board" aria-label="Whiteboard studio">
+      <div id="board-studio-slot" class="studio-slot studio-slot-full">
+        <div id="studio" class="studio">
+          <div class="studio-top">
+            <input id="board-name" class="board-name" maxlength="80" aria-label="Board name" value="Untitled board" />
+            <div class="studio-top-actions">
+              <button id="board-new" class="btn btn-sm">New board</button>
+              <button id="board-library-btn" class="btn btn-ghost btn-sm" aria-expanded="false" aria-controls="board-library">Library</button>
+              <div class="menu-wrap">
+                <button id="board-export-btn" class="btn btn-ghost btn-sm" aria-haspopup="true" aria-expanded="false">Export</button>
+                <div id="board-export-menu" class="menu" hidden>
+                  <button data-exp="png">PNG image</button>
+                  <button data-exp="jpeg">JPEG image</button>
+                  <button data-exp="svg">SVG vector</button>
+                  <button data-exp="pdf">PDF document</button>
+                  <button data-exp="json">JSON backup</button>
+                  <button data-exp="import">Import JSON…</button>
+                </div>
+              </div>
+              <select id="board-bg" aria-label="Paper style">
+                <option value="blank">Blank</option><option value="dots">Dot grid</option>
+                <option value="grid">Square grid</option><option value="ruled">Ruled paper</option>
+                <option value="graph">Graph paper</option><option value="cornell">Cornell notes</option>
+                <option value="dark">Dark paper</option><option value="light">Light paper</option>
+              </select>
+            </div>
+          </div>
+          <div class="studio-body">
+            <div class="tool-rail" role="toolbar" aria-label="Drawing tools" id="tool-rail"></div>
+            <div class="canvas-wrap" id="canvas-wrap">
+              <canvas id="board-canvas"></canvas>
+              <div id="board-overlay" class="board-overlay"></div>
+              <div id="board-paws" class="board-paws" aria-hidden="true"></div>
+              <div class="zoom-hud">
+                <button id="zoom-out" class="btn-icon btn-icon-sm" aria-label="Zoom out">−</button>
+                <button id="zoom-fit" class="btn-icon btn-icon-sm" aria-label="Fit drawing" title="Fit to drawing">▣</button>
+                <span id="zoom-pct" aria-live="off">100%</span>
+                <button id="zoom-in" class="btn-icon btn-icon-sm" aria-label="Zoom in">+</button>
+              </div>
+            </div>
+            <div class="brush-rail" aria-label="Brush settings">
+              <button id="brush-swatch" class="brush-swatch" aria-haspopup="true" aria-expanded="false" aria-label="Colour"></button>
+              <div id="color-pop" class="color-pop" hidden>
+                <input type="color" id="brush-color" aria-label="Colour picker" />
+                <div class="color-fields">
+                  <label>Hex <input id="brush-hex" maxlength="7" spellcheck="false" /></label>
+                  <label>R <input id="brush-r" type="number" min="0" max="255" /></label>
+                  <label>G <input id="brush-g" type="number" min="0" max="255" /></label>
+                  <label>B <input id="brush-b" type="number" min="0" max="255" /></label>
+                </div>
+                <p class="pop-label">Study presets</p><div id="preset-colors" class="swatch-row"></div>
+                <p class="pop-label">Recent</p><div id="recent-colors" class="swatch-row"></div>
+                <p class="pop-label">Favourites <button id="fav-add" class="btn btn-ghost btn-sm">＋ save current</button></p>
+                <div id="fav-colors" class="swatch-row"></div>
+              </div>
+              <label class="rail-field">Size <input id="brush-size" type="range" min="1" max="60" value="4" /><output id="brush-size-out">4</output></label>
+              <label class="rail-field">Opacity <input id="brush-opacity" type="range" min="5" max="100" value="100" /><output id="brush-opacity-out">100%</output></label>
+              <label class="rail-field">Smoothing <input id="brush-smooth" type="range" min="0" max="100" value="55" /><output id="brush-smooth-out">55%</output></label>
+              <label class="rail-check"><input type="checkbox" id="brush-pressure" checked /> Pressure</label>
+              <div class="rail-spacer"></div>
+              <button id="board-undo" class="btn-icon" aria-label="Undo" title="Undo (Ctrl+Z)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.5 8H7.8l2.6-2.6L9 4 4 9l5 5 1.4-1.4L7.8 10h4.7a4.5 4.5 0 0 1 0 9H7v2h5.5a6.5 6.5 0 0 0 0-13z"/></svg></button>
+              <button id="board-redo" class="btn-icon" aria-label="Redo" title="Redo (Ctrl+Y)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11.5 8h4.7l-2.6-2.6L15 4l5 5-5 5-1.4-1.4 2.6-2.6h-4.7a4.5 4.5 0 0 0 0 9H17v2h-5.5a6.5 6.5 0 0 1 0-13z"/></svg></button>
+              <button id="board-clear" class="btn-icon" aria-label="Clear board" title="Clear board"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 7h12l-1 14H7L6 7zm3-3h6l1 2H8l1-2zM4 5h16v2H4V5zm6 5h2v8h-2v-8z"/></svg></button>
+              <button id="board-delete" class="btn-icon" aria-label="Delete board" title="Delete this board"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6l1 2h4v2H4V5h4l1-2zM6 9h12l-1 12H7L6 9z" opacity=".9"/></svg></button>
+            </div>
+          </div>
+          <div id="board-library" class="board-library" hidden aria-label="Saved boards">
+            <div class="lib-head">
+              <input id="lib-search" type="search" placeholder="Search boards…" aria-label="Search boards" />
+              <select id="lib-sort" aria-label="Sort boards"><option value="edited">Last edited</option><option value="created">Newest</option><option value="name">Name A–Z</option></select>
+              <button id="lib-close" class="btn-icon" aria-label="Close library"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6.4 5 5.6 5.6L17.6 5 19 6.4 13.4 12l5.6 5.6-1.4 1.4-5.6-5.6L6.4 19 5 17.6 10.6 12 5 6.4 6.4 5z"/></svg></button>
+            </div>
+            <div id="lib-grid" class="lib-grid"></div>
+            <div class="chart-empty" id="lib-empty" hidden><p>No boards match — try a different search.</p></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════ QUESTS · AWARDS · PET ══════════════════════ -->
+    <section id="view-quests" class="view" aria-label="Quests, achievements and your cat">
+      <div class="view-toolbar">
+        <div class="toolbar-left">
+          <h1 class="view-title">Quest board</h1>
+          <p class="view-sub">Daily, weekly and monthly goals — plus everything your cat has earned.</p>
+        </div>
+        <div class="toolbar-right">
+          <div class="seg" role="tablist" id="quest-tabs">
+            <button class="seg-btn is-active" data-tab="quests" role="tab" aria-selected="true">Quests</button>
+            <button class="seg-btn" data-tab="awards" role="tab" aria-selected="false">Achievements</button>
+            <button class="seg-btn" data-tab="pet" role="tab" aria-selected="false">Your cat</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="panel-quests" class="quest-panel">
+        <article class="card quest-col"><header class="card-head"><h2 class="card-title">Daily</h2><span id="quest-reset-d" class="muted small"></span></header><ul id="quests-daily" class="quest-list"></ul></article>
+        <article class="card quest-col"><header class="card-head"><h2 class="card-title">Weekly</h2><span id="quest-reset-w" class="muted small"></span></header><ul id="quests-weekly" class="quest-list"></ul></article>
+        <article class="card quest-col"><header class="card-head"><h2 class="card-title">Monthly</h2><span id="quest-reset-m" class="muted small"></span></header><ul id="quests-monthly" class="quest-list"></ul></article>
+      </div>
+
+      <div id="panel-awards" class="awards-panel" hidden>
+        <div class="awards-head">
+          <p id="ach-summary" class="ach-summary"></p>
+          <div class="seg" id="ach-filter">
+            <button class="seg-btn is-active" data-f="all" aria-pressed="true">All</button>
+            <button class="seg-btn" data-f="unlocked" aria-pressed="false">Unlocked</button>
+            <button class="seg-btn" data-f="locked" aria-pressed="false">Locked</button>
+          </div>
+        </div>
+        <div id="ach-grid" class="ach-grid"></div>
+      </div>
+
+      <div id="panel-pet" class="pet-panel" hidden>
+        <article class="card pet-card">
+          <div id="pet-stage" class="pet-stage" aria-hidden="true"></div>
+          <div class="pet-meta">
+            <label class="field-row">Cat's name <input id="pet-name" maxlength="20" /></label>
+            <p class="pet-level-line"><span id="pet-level" class="pet-level">Level 1</span><span id="pet-title" class="muted"></span></p>
+            <div class="paw-progress"><div id="pet-xp-fill" class="paw-progress-fill"></div></div>
+            <p id="pet-xp-label" class="muted small"></p>
+            <p class="muted small" id="pet-facts"></p>
+          </div>
+        </article>
+        <article class="card pet-unlocks">
+          <header class="card-head"><h2 class="card-title">Wardrobe & unlocks</h2></header>
+          <p class="pop-label">Hats</p><div id="pet-hats" class="unlock-row"></div>
+          <p class="pop-label">Accessories</p><div id="pet-accs" class="unlock-row"></div>
+          <p class="pop-label">Level milestones</p><ul id="pet-track" class="pet-track"></ul>
+        </article>
+      </div>
+    </section>
+
+    <!-- ══════════════════════ MUSIC ══════════════════════ -->
+    <section id="view-music" class="view" aria-label="Music">
+      <div class="view-toolbar">
+        <div class="toolbar-left">
+          <h1 class="view-title">Music</h1>
+          <p class="view-sub">Spotify for studying — the player keeps playing in a corner dock while you work.</p>
+        </div>
+      </div>
+      <div class="music-grid">
+        <article class="card">
+          <header class="card-head"><h2 class="card-title">Play anything</h2></header>
+          <form id="music-form" class="music-form" autocomplete="off">
+            <input id="music-url" type="url" placeholder="Paste a Spotify playlist, album, song or podcast link…" aria-label="Spotify link" />
+            <button class="btn" type="submit">Load</button>
+          </form>
+          <p class="muted small">Works with any open.spotify.com link or spotify: URI. Your last player is remembered.</p>
+          <p class="muted small" id="music-last"></p>
+        </article>
+        <article class="card">
+          <header class="card-head"><h2 class="card-title">Focus shortcuts</h2></header>
+          <div class="music-shorts" id="music-shorts"></div>
+        </article>
+        <article class="card music-player-card">
+          <header class="card-head"><h2 class="card-title">Player</h2>
+            <div class="tasks-head-actions">
+              <button id="dock-mini-btn" class="btn btn-ghost btn-sm">Minimise to corner</button>
+              <button id="dock-hide-btn" class="btn btn-ghost btn-sm">Hide player</button>
+            </div>
+          </header>
+          <div id="player-anchor" class="player-anchor"><p class="muted">Load something above and the player appears here — it stays docked when you leave this page.</p></div>
+        </article>
+      </div>
+    </section>
+
+    <!-- ══════════════════════ CONSISTENCY ══════════════════════ -->
+    <section id="view-consistency" class="view" aria-label="Consistency">
+      <div class="view-toolbar">
+        <div class="toolbar-left">
+          <h1 class="view-title">Consistency</h1>
+          <p class="view-sub">How steadily you show up — with honest, personalised advice.</p>
+        </div>
+      </div>
+      <div class="stat-grid" id="cons-tiles"></div>
+      <article class="card"><header class="card-head"><h2 class="card-title">Your cat's advice</h2></header><ul id="cons-advice" class="advice-list"></ul></article>
+      <article class="card">
+        <header class="card-head"><h2 class="card-title">Hours by time of day</h2></header>
+        <div class="chart-box chart-box-sm"><canvas id="chart-hourly" aria-label="Hours studied by hour of day"></canvas></div>
+        <div class="chart-empty" id="chart-hourly-empty" hidden><p>Log a few sessions to reveal your golden hours.</p></div>
+      </article>
+      <article class="card"><header class="card-head"><h2 class="card-title">Past year</h2></header><div id="cons-heatmap" class="cons-heatmap"></div></article>
+    </section>
+  </main>
+
+  <div id="toast-root" class="toast-root" aria-live="polite" aria-relevant="additions"></div>
+  <div id="modal-root"></div>
+
+  <div id="fx-layer" aria-hidden="true"></div>
+
+  <div id="music-dock" class="music-dock is-hidden" role="complementary" aria-label="Music player dock">
+    <div class="dock-bar">
+      <span class="dock-title"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v9.3a4 4 0 1 0 2 3.5V7h5V3h-7z"/></svg><span id="dock-label">Music</span></span>
+      <div class="dock-actions">
+        <button id="dock-expand" class="btn-icon btn-icon-sm" aria-label="Open Music page" title="Open Music page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h6v2H7v10h10v-4h2v6H5V5zm8 0h6v6h-2V8.4l-6.3 6.3-1.4-1.4L15.6 7H13V5z"/></svg></button>
+        <button id="dock-close" class="btn-icon btn-icon-sm" aria-label="Hide player" title="Hide player"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6.4 5 5.6 5.6L17.6 5 19 6.4 13.4 12l5.6 5.6-1.4 1.4-5.6-5.6L6.4 19 5 17.6 10.6 12 5 6.4 6.4 5z"/></svg></button>
+      </div>
+    </div>
+    <div id="dock-frame-wrap" class="dock-frame-wrap"></div>
+  </div>
+
+  <div id="cat-root" class="cat-root">
+    <div id="cat-bubble" class="cat-bubble" role="status" aria-live="polite" hidden></div>
+    <button id="cat-stage" class="cat-stage" aria-label="Your study cat — click to pet"></button>
+  </div>
+
+  <noscript>
+    <div class="noscript-note">RevTrack needs JavaScript to time sessions and store your data locally. Please enable JavaScript.</div>
+  </noscript>
+</body>
+</html>

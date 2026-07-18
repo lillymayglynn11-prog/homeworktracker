@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 48" role="img" aria-label="RevTrack">
+  <rect x="2" y="2" width="44" height="44" rx="13" fill="#171b2d"/>
+  <path d="M13 31 L21 22 L27 27.5 L35 15.5" fill="none" stroke="#ffe45c" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="58" y="32" font-family="'Space Grotesk','Segoe UI',system-ui,sans-serif" font-size="24" font-weight="700" fill="#171b2d" letter-spacing="-0.5">RevTrack</text>
+</svg>
